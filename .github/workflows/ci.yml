@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+defaults:
+  run:
+    # GitHub's default is `bash -e {0}`, which has no pipefail: `swift build | tee` then
+    # reports tee's exit code, so a build that fails with a manifest error still reports a
+    # green step and every later step runs against nothing.
+    shell: bash -euo pipefail {0}
+
+jobs:
+  test:
+    # macos-14 ships Swift 5.10 by default and cannot read this package's
+    # tools-version 6.0 manifest at all. This workflow does not run that image, so the
+    # pin is the guard rather than something a job here demonstrates.
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show toolchain
+        run: swift --version
+
+      - name: Build
+        run: swift build 2>&1 | tee build.log
+
+      - name: Fail on build warnings
+        run: |
+          count=$(grep -c 'warning:' build.log || true)
+          if [ "$count" != "0" ]; then
+            echo "build emitted $count warning lines"
+            grep 'warning:' build.log
+            exit 1
+          fi
+
+      - name: Test
+        run: swift test 2>&1 | tee test.log
+
+      - name: Fail on test-target warnings
+        run: |
+          count=$(grep -c 'warning:' test.log || true)
+          if [ "$count" != "0" ]; then
+            echo "test target emitted $count warning lines"
+            grep 'warning:' test.log
+            exit 1
+          fi
+
+      - name: The boundary lint must actually have run
+        run: |
+          grep -q "testBuiltBinaryReferencesOnlyAllowedModules.*passed" test.log \
+            || { echo "the boundary lint did not run or did not pass on this runner"; exit 1; }
+          grep -E "Executed [0-9]+ tests" test.log | tail -1

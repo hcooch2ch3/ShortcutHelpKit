@@ -1,0 +1,67 @@
+name: Bug report
+description: Something the package does that it should not, or does not do that it should.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing: if a shortcut lists correctly but never lights on the keyboard,
+        run `HighlightAudit`, `unnamedKeys(from:over:)` and `foldedKeys(from:over:)`
+        first. The README section "Checking your integration" covers what each one sees;
+        a key that lights the *wrong* cap is only visible to the third. A projector naming a key
+        differently from the grid produces that symptom without anything being broken.
+
+  - type: input
+    id: version
+    attributes:
+      label: Package version
+      placeholder: "0.2.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: layout
+    attributes:
+      label: Physical keyboard layout
+      description: >
+        The illustration is a fixed US-ANSI grid. On any other physical layout the drawing
+        is wrong about where the keys are, and that is a known limit rather than a defect.
+        This field decides which of the two you are seeing.
+      options:
+        - US-ANSI
+        - ISO (UK, German, Nordic, and similar)
+        - JIS (Japanese)
+        - Other or not sure
+    validations:
+      required: true
+
+  - type: input
+    id: input-source
+    attributes:
+      label: Active input source
+      description: The software layout selected in System Settings, if it is not US.
+      placeholder: "US"
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what you got instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: catalog
+    attributes:
+      label: The row and the projector
+      description: >
+        For a highlighting problem, the ShortcutItem involved and what your KeyProjector
+        returns for its key code, which is what separates a projector mismatch from a
+        defect in the grid.
+      render: swift
+
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version
+      placeholder: "14.6"
